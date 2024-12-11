@@ -23,7 +23,11 @@ def remove_leading_zeros(stone):
 
     return new_stone
 
+solutions = {}
 def evolve(stone):
+    if stone in solutions:
+        return solutions[stone]
+
     result = []
     if stone == "0":
         result.append("1")
@@ -38,27 +42,48 @@ def evolve(stone):
         result.append(second_half)
     else:
         result.append(str(int(stone) * 2024))
+
+    # Memoize
+    solutions[stone] = result
     return result
 
 def change_stones(stones):
-    new_stones = []
+    new_stones = {}
     
     for s in stones:
-        new_stones.extend(evolve(s))
+        tot_s = stones[s]
+        stones_to_add = evolve(s)
+        for new_s in stones_to_add:
+            if new_s not in new_stones:
+                new_stones[new_s] = 1 * tot_s
+            else:
+                new_stones[new_s] += 1 * tot_s
     
     return new_stones
 
+def count_stones(stones):
+    count = 0
+    for s in stones:
+        count += stones[s]
+    return count
+
 def main():
     input = get_input("Day11/input.txt")
-    stones = input.split(" ")
-    blinks = 25
+    stones = {}
+    for s in input.split(" "):
+        if s not in stones:
+            stones[s] = 1
+        else:
+            stones[s] += 1
 
     # print(f'Starting: \t{stones}')
+    blinks = 75
     for i in range(0, blinks):
         stones = change_stones(stones)
+        print(f"Blink #{i + 1}")
         # print(f'Blink #{i+1}: \t{stones}')
     
-    result = len(stones)
+    result = count_stones(stones)
     # print(f'Result: \t{stones}')
     print(result)
         
