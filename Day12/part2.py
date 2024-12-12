@@ -30,8 +30,11 @@ def count_sides(perimeter):
             freq[p] += 1
 
     # Find vertical sides
-    print(freq)
-    for p in perimeter:
+    verticals = set()
+    for p in freq:
+        if p in verticals:
+            continue
+
         # Choose a perimeter tuple not yet associated with a side
         if freq[p] > 0:
             r = p[0]
@@ -49,6 +52,7 @@ def count_sides(perimeter):
 
                 # Otherwise, there's a connecting perimeter tuple above that can be associated with the same vertical side
                 freq[(top, c)] -= 1
+                verticals.add((top, c))
                 top -= 1
                 # Stop when there is no connecting perimeter tuple on above
 
@@ -61,6 +65,7 @@ def count_sides(perimeter):
 
                 # Same as before, there's a connecting perimeter tuple below that can be associated with the same vertical side
                 freq[(bottom, c)] -= 1
+                verticals.add((bottom, c))
                 bottom += 1
                 # Stop when there is no connecting perimeter tuple below
 
@@ -70,12 +75,17 @@ def count_sides(perimeter):
             else:
                 # Otherwise, count this vertical side as a unique side
                 total_sides += 1
+                verticals.add(p)
     big_verticals = total_sides
     # print("Big vertical sides:", big_verticals)
-    print(freq)
+    # print(freq)
 
     # Find horizontal sides (same as before, but with columns; looking left and right)
-    for p in perimeter:
+    horizontals = set()
+    for p in freq:
+        if p in horizontals:
+            continue
+
         if freq[p] > 0:
             r = p[0]
             c = p[1]
@@ -88,13 +98,16 @@ def count_sides(perimeter):
                 if freq[(r, left)] == 0:
                     break
                 freq[(r, left)] -= 1
+                horizontals.add((r, left))
                 left -= 1
+                
 
             right = c + 1
             while (r, right) in perimeter:
                 if freq[(r, right)] == 0:
                     break
                 freq[(r, right)] -= 1
+                horizontals.add((r, right))
                 right += 1
 
             if left == c - 1 and right == c + 1:
@@ -103,7 +116,7 @@ def count_sides(perimeter):
             else:
                 # Otherwise, count this horizontal side as a unique side
                 total_sides += 1
-
+                horizontals.add(p)
     big_horizontals = total_sides - big_verticals
     # print("Big horizontal sides:", big_horizontals)
     # print(freq)
@@ -116,6 +129,7 @@ def count_sides(perimeter):
         print(freq)
         print("Big verticals sides:", big_verticals)
         print("Big horizontal sides:", big_horizontals)
+        print("Horizonals:", horizontals)
         print("Small sides:", total_sides - big_horizontals - big_verticals)
     # print(freq)
 
@@ -169,7 +183,7 @@ def get_region_and_price(start, grid):
     area = len(region)
     sides = count_sides(outer_layer)
     price = area * sides
-    if sides % 2 != 0:
+    if sides % 2 == 1:
         print("Start:", start)
         print(plant, "region's sides:", sides, "\n")
     return region, price
