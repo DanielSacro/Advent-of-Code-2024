@@ -17,122 +17,62 @@ def get_neighbors(plot):
 
     return neighbors
 
-def count_sides(perimeter):
-    total_sides = 0
+# Counting sides using hint from Reddit (# sides = # corners)
+def count_sides(region, perimeter):
+    if len(region) == 1:
+        return 4
 
-    # Frequency of a perimeter tuple = how many sides are caused in the perimeter coordinate (like sweeper)
-    # Example: If a perimeter tuple shows up 3 times in the perimeter variable, there are 3 sides associated with that perimeter tuple
-    freq = {}
+    # Count "convex" corners
+    convex_corners = 0
+    for plot in region:
+        neighbors = get_neighbors(plot)
+        
+        fences = []
+        for n in neighbors:
+            if n in perimeter:
+                fences.append(n)
+        
+        # Count corners
+        if len(fences) == 4:
+            # Plot is fenced off on all sides
+            convex_corners += 4
+        elif len(fences) == 3:
+            # Any configuration of 3 fences around a plot = 2 corners
+            convex_corners += 2
+        elif len(fences) == 2:
+            fence1 = fences[0]
+            fence2 = fences[1]
+            if fence1[0] != fence2[0] and fence1[1] != fence2[1]:
+                convex_corners += 1
+
+        # 1 Fence alone does not create a corner
+    
+    # Count "concave" corners
+
+    seen = {}
+    concave_corners = 0
     for p in perimeter:
-        if p not in freq:
-            freq[p] = 1
+        if p not in seen:
+            seen[p] = 1
         else:
-            freq[p] += 1
+            # concave_corners.append(p)
+            seen[p] += 1
 
-    # Find vertical sides
-    verticals = set()
-    for p in freq:
-        if p in verticals:
+    for s in seen:
+        if seen[s] == 1:
             continue
+        elif seen[s] == 4:
+            concave_corners += 4
+        else:
+            concave_corners += seen[s] - 1
 
-        # Choose a perimeter tuple not yet associated with a side
-        if freq[p] > 0:
-            r = p[0]
-            c = p[1]
+    # total_sides = len(convex_corners) + len(concave_corners)
+    total_sides = convex_corners + concave_corners
 
-            # Associate this tuple with one vertical side
-            freq[p] -= 1
-
-            # Find top portions of perimeter tuple to form top portion of side
-            top = r - 1
-            while (top, c) in perimeter:
-                # Perimeter tuple above is already associated with other sides
-                if freq[(top, c)] == 0:
-                    break
-
-                # Otherwise, there's a connecting perimeter tuple above that can be associated with the same vertical side
-                freq[(top, c)] -= 1
-                verticals.add((top, c))
-                top -= 1
-                # Stop when there is no connecting perimeter tuple on above
-
-            # Find bottom portions of perimeter tuple to form right portion of side
-            bottom = r + 1
-            while (bottom, c) in perimeter:
-                # Perimeter tuple below is already associated with other sides
-                if freq[(bottom, c)] == 0:
-                    break
-
-                # Same as before, there's a connecting perimeter tuple below that can be associated with the same vertical side
-                freq[(bottom, c)] -= 1
-                verticals.add((bottom, c))
-                bottom += 1
-                # Stop when there is no connecting perimeter tuple below
-
-            if top == r - 1 and bottom == r + 1:
-                # No connecting horizontal tuples, so this tuple might be part of a horizontal side
-                freq[p] += 1
-            else:
-                # Otherwise, count this vertical side as a unique side
-                total_sides += 1
-                verticals.add(p)
-    big_verticals = total_sides
-    # print("Big vertical sides:", big_verticals)
-    # print(freq)
-
-    # Find horizontal sides (same as before, but with columns; looking left and right)
-    horizontals = set()
-    for p in freq:
-        if p in horizontals:
-            continue
-
-        if freq[p] > 0:
-            r = p[0]
-            c = p[1]
-
-            # Associate this tuple with one horizontal side
-            freq[p] -= 1
-
-            left = c - 1
-            while (r, left) in perimeter:
-                if freq[(r, left)] == 0:
-                    break
-                freq[(r, left)] -= 1
-                horizontals.add((r, left))
-                left -= 1
-                
-
-            right = c + 1
-            while (r, right) in perimeter:
-                if freq[(r, right)] == 0:
-                    break
-                freq[(r, right)] -= 1
-                horizontals.add((r, right))
-                right += 1
-
-            if left == c - 1 and right == c + 1:
-                # No connecting horizontal tuples
-                freq[p] += 1
-            else:
-                # Otherwise, count this horizontal side as a unique side
-                total_sides += 1
-                horizontals.add(p)
-    big_horizontals = total_sides - big_verticals
-    # print("Big horizontal sides:", big_horizontals)
-    # print(freq)
-
-    # Remaining tuples were not part of a bigger horizontal or vertical side; they are their own single-tuple sides
-    for p in freq:
-        if freq[p] > 0:
-            total_sides += freq[p]
-    if (total_sides % 2) != 0:
-        print(freq)
-        print("Big verticals sides:", big_verticals)
-        print("Big horizontal sides:", big_horizontals)
-        print("Horizonals:", horizontals)
-        print("Small sides:", total_sides - big_horizontals - big_verticals)
-    # print(freq)
-
+    if total_sides % 2 == 0:
+        print(perimeter)
+        print("convex:", convex_corners)
+        print("concave:", concave_corners)
     return total_sides
 
 def get_region_and_price(start, grid):
@@ -181,10 +121,11 @@ def get_region_and_price(start, grid):
 
     # Calculate the price of the region
     area = len(region)
-    sides = count_sides(outer_layer)
+    sides = count_sides(region, outer_layer)
     price = area * sides
     if sides % 2 == 1:
         print("Start:", start)
+        print(region)
         print(plant, "region's sides:", sides, "\n")
     return region, price
 
