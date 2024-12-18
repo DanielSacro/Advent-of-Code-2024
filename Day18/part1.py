@@ -1,5 +1,7 @@
 # RAM Run
 import heapq
+MAX_SIDE_LENGTH = 71
+TOT_BYTES_FALLEN = 1024
 
 def get_input(filename):
     file = open(filename, "r")
@@ -27,18 +29,16 @@ def output_solution(grid, solution_path):
         put_output(filename, "\n")
 
 def generate_grid():
-    max_side_length = 71
     grid = []
-    for i in range(0, max_side_length):
+    for i in range(0, MAX_SIDE_LENGTH):
         row = []
-        for j in range(0, max_side_length):
+        for j in range(0, MAX_SIDE_LENGTH):
             row.append(".")
         grid.append(row)
     return grid
 
 def drop_bytes(grid, bytes):
-    tot_bytes_fallen = 1024
-    for i in range(0, tot_bytes_fallen):
+    for i in range(0, TOT_BYTES_FALLEN):
         coords = bytes[i].split(",")
         row = int(coords[1])
         col = int(coords[0])
@@ -99,7 +99,7 @@ def get_children(grid, current):
 def dijkstra(grid):
     # Initialize start and end nodes
     start = Node(0, 0)
-    end = Node(70, 70)
+    end = Node(MAX_SIDE_LENGTH - 1, MAX_SIDE_LENGTH - 1)
     end.cost = -1 # Default value for when no solution is found
 
     # Initialize OPEN and CLOSED lists
